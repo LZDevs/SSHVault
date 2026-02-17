@@ -29,9 +29,18 @@ echo "==> Code signing (ad-hoc)..."
 codesign --force --deep --sign - "$APP_DIR"
 
 DMG_PATH="$PROJECT_DIR/build/SSHMan.dmg"
+DMG_RW="$PROJECT_DIR/build/SSHMan-rw.dmg"
 echo "==> Creating DMG..."
-rm -f "$DMG_PATH"
-hdiutil create -volname "SSHMan" -srcfolder "$APP_DIR" -ov -format UDZO "$DMG_PATH"
+rm -f "$DMG_PATH" "$DMG_RW"
+
+# Create a writable DMG, mount it, populate, unmount, then convert to compressed
+hdiutil create -size 50m -fs HFS+ -volname "SSHMan" "$DMG_RW"
+hdiutil attach "$DMG_RW" -nobrowse -mountpoint /Volumes/SSHMan
+cp -R "$APP_DIR" /Volumes/SSHMan/
+ln -s /Applications /Volumes/SSHMan/Applications
+hdiutil detach /Volumes/SSHMan
+hdiutil convert "$DMG_RW" -format UDZO -o "$DMG_PATH"
+rm -f "$DMG_RW"
 
 echo ""
 echo "================================================"
