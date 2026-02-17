@@ -51,9 +51,14 @@ final class TerminalPreferences: ObservableObject {
     @Published var hostOverrides: [String: HostTerminalOverride] = [:]
 
     private static let overridesURL: URL = {
-        let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("SSHMan", isDirectory: true)
-        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        guard let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            fatalError("Application Support directory unavailable")
+        }
+        let url = base.appendingPathComponent("SSHMan", isDirectory: true)
+        try? FileManager.default.createDirectory(
+            at: url, withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700]
+        )
         return url.appendingPathComponent("host_terminal_prefs.json")
     }()
 
@@ -110,6 +115,7 @@ final class TerminalPreferences: ObservableObject {
         let list = Array(hostOverrides.values)
         guard let data = try? JSONEncoder().encode(list) else { return }
         try? data.write(to: Self.overridesURL, options: .atomic)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Self.overridesURL.path)
     }
 }
 

@@ -41,19 +41,19 @@ struct SSHHost: Identifiable, Codable, Hashable {
         host.isEmpty ? hostName : host
     }
 
-    /// Build the ssh command string for this host
+    /// Build the ssh command string for this host (shell-safe)
     var sshCommand: String {
         // If there's a Host alias, just use that
         if !host.isEmpty && host != "*" {
-            return "ssh \(host)"
+            return "ssh \(host.shellEscaped)"
         }
         var cmd = "ssh"
         if !user.isEmpty {
-            cmd += " \(user)@\(hostName)"
+            cmd += " \(user.shellEscaped)@\(hostName.shellEscaped)"
         } else {
-            cmd += " \(hostName)"
+            cmd += " \(hostName.shellEscaped)"
         }
-        if let port, port != 22 {
+        if let port, port != TerminalService.defaultSSHPort {
             cmd += " -p \(port)"
         }
         return cmd
@@ -62,5 +62,19 @@ struct SSHHost: Identifiable, Codable, Hashable {
     /// Whether this is a wildcard/default host
     var isWildcard: Bool {
         host == "*"
+    }
+}
+
+// MARK: - Shell Escaping
+
+extension String {
+    /// Shell-escape for safe use in command strings.
+    /// Only escapes if the string contains characters that need it.
+    var shellEscaped: String {
+        let safe = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_./:@"))
+        if unicodeScalars.allSatisfy({ safe.contains($0) }) {
+            return self
+        }
+        return "'" + replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 }

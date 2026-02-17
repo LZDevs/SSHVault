@@ -111,7 +111,19 @@ final class SSHKeyService {
 
     /// Generate a new SSH key pair
     func generateKey(name: String, type: String = "ed25519", comment: String = "", passphrase: String = "") -> Bool {
-        let keyPath = sshDir.appendingPathComponent(name).path
+        let safeName = name.trimmingCharacters(in: .whitespaces)
+
+        // Reject path traversal and special characters
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        guard !safeName.isEmpty,
+              !safeName.contains("/"),
+              !safeName.contains("\\"),
+              !safeName.hasPrefix("."),
+              safeName.unicodeScalars.allSatisfy({ allowed.contains($0) }) else {
+            return false
+        }
+
+        let keyPath = sshDir.appendingPathComponent(safeName).path
 
         // Don't overwrite existing keys
         if fm.fileExists(atPath: keyPath) {

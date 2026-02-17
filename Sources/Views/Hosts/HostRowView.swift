@@ -84,6 +84,10 @@ struct HostRowView: View {
                 isHovered = hovering
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("SSH Host \(host.displayName)")
+        .accessibilityHint("Double click to connect")
+        .accessibilityAction(.default) { onConnect?() }
     }
 
     private var connectionString: String {
@@ -93,7 +97,7 @@ struct HostRowView: View {
         } else {
             parts.append(host.hostName)
         }
-        if let port = host.port, port != 22 {
+        if let port = host.port, port != TerminalService.defaultSSHPort {
             parts.append(":\(port)")
         }
         return parts.joined()

@@ -24,7 +24,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            NSApp.activate(ignoringOtherApps: true)
+            if #available(macOS 14.0, *) {
+                NSApp.activate()
+            } else {
+                NSApp.activate(ignoringOtherApps: true)
+            }
             NSApp.windows.first?.makeKeyAndOrderFront(nil)
         }
     }

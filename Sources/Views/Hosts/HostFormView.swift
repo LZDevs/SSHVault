@@ -58,7 +58,15 @@ struct HostFormView: View {
     }
 
     private var isValid: Bool {
-        !host.trimmingCharacters(in: .whitespaces).isEmpty
+        let trimmedHost = host.trimmingCharacters(in: .whitespaces)
+        guard !trimmedHost.isEmpty else { return false }
+        // Validate port range if provided
+        if let portStr = portString.nilIfEmpty, let p = Int(portStr) {
+            if !(1...65535).contains(p) { return false }
+        } else if let portStr = portString.nilIfEmpty, Int(portStr) == nil {
+            return false // non-numeric port
+        }
+        return true
     }
 
     private var title: String {
@@ -229,7 +237,7 @@ struct HostFormView: View {
             }
             .padding()
         }
-        .onAppear {
+        .task {
             availableKeys = SSHKeyService.shared.listKeys()
         }
     }
@@ -261,7 +269,7 @@ struct HostFormView: View {
     }
 
     private func saveHost() {
-        let port = Int(portString)
+        let port: Int? = portString.nilIfEmpty.flatMap { Int($0) }
         var extras: [String: String] = [:]
 
         // Parse extra options
@@ -309,5 +317,12 @@ struct HostFormView: View {
         if onCancel == nil {
             dismiss()
         }
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

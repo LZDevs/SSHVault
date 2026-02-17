@@ -2,12 +2,6 @@ import Foundation
 
 /// Parses and writes SSH config files
 struct SSHConfig {
-    /// Known SSH config directives that we handle explicitly
-    private static let knownDirectives: Set<String> = [
-        "hostname", "user", "port", "identityfile",
-        "proxyjump", "forwardagent"
-    ]
-
     /// Parse an SSH config file into host entries
     static func parse(content: String) -> [SSHHost] {
         var hosts: [SSHHost] = []
@@ -93,7 +87,9 @@ struct SSHConfig {
         case "user":
             host.user = value
         case "port":
-            host.port = Int(value)
+            if let p = Int(value), (1...65535).contains(p) {
+                host.port = p
+            }
         case "identityfile":
             host.identityFile = value
         case "proxyjump":
@@ -103,6 +99,39 @@ struct SSHConfig {
         default:
             host.extraOptions[key] = value
         }
+    }
+
+    /// Sanitize a host entry (strip control chars from fields, filter dangerous extraOptions)
+    static func sanitizeHost(_ host: SSHHost) -> SSHHost {
+        var h = host
+        h.host = stripControlChars(h.host)
+        h.hostName = stripControlChars(h.hostName)
+        h.user = stripControlChars(h.user)
+        h.identityFile = stripControlChars(h.identityFile)
+        h.proxyJump = stripControlChars(h.proxyJump)
+
+        // Validate port range
+        if let port = h.port, !(1...65535).contains(port) {
+            h.port = nil
+        }
+
+        // Sanitize extra options: reject keys/values with control characters
+        var cleaned: [String: String] = [:]
+        for (key, value) in h.extraOptions {
+            let cleanKey = stripControlChars(key)
+            let cleanValue = stripControlChars(value)
+            if !cleanKey.isEmpty {
+                cleaned[cleanKey] = cleanValue
+            }
+        }
+        h.extraOptions = cleaned
+
+        return h
+    }
+
+    private static func stripControlChars(_ s: String) -> String {
+        s.unicodeScalars.filter { $0.value >= 32 || $0 == "\t" }
+            .map { String($0) }.joined()
     }
 
     /// Serialize hosts back to SSH config format
@@ -142,9 +171,11 @@ struct SSHConfig {
                 lines.append("    ForwardAgent yes")
             }
 
-            // Write extra options in sorted order for consistency
+            // Write extra options — reject entries with newlines
             for key in host.extraOptions.keys.sorted() {
-                if let value = host.extraOptions[key] {
+                if let value = host.extraOptions[key],
+                   !key.contains("\n"), !key.contains("\r"),
+                   !value.contains("\n"), !value.contains("\r") {
                     lines.append("    \(key) \(value)")
                 }
             }

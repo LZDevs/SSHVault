@@ -1,4 +1,7 @@
 import Foundation
+import os
+
+private let logger = Logger(subsystem: "com.lzdevs.sshman", category: "groups")
 
 struct HostGroup: Identifiable, Codable, Hashable {
     let id: UUID
@@ -12,9 +15,14 @@ struct HostGroup: Identifiable, Codable, Hashable {
     }
 
     static let supportDir: URL = {
-        let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("SSHMan", isDirectory: true)
-        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        guard let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            fatalError("Application Support directory unavailable")
+        }
+        let url = base.appendingPathComponent("SSHMan", isDirectory: true)
+        try? FileManager.default.createDirectory(
+            at: url, withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700]
+        )
         return url
     }()
 
@@ -31,6 +39,11 @@ struct HostGroup: Identifiable, Codable, Hashable {
 
     static func saveAll(_ groups: [HostGroup]) {
         guard let data = try? JSONEncoder().encode(groups) else { return }
-        try? data.write(to: storageURL, options: .atomic)
+        do {
+            try data.write(to: storageURL, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: storageURL.path)
+        } catch {
+            logger.error("Failed to save groups: \(error.localizedDescription, privacy: .private)")
+        }
     }
 }

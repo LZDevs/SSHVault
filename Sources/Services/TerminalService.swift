@@ -1,8 +1,13 @@
 import Foundation
+import os
+
+private let logger = Logger(subsystem: "com.lzdevs.sshman", category: "terminal")
 
 /// Launches SSH connections in configurable terminal applications
 struct TerminalService {
     private static let prefs = TerminalPreferences.shared
+
+    static let defaultSSHPort = 22
 
     /// Shell-escape a string for safe use in sh -c
     private static func shellEscape(_ s: String) -> String {
@@ -23,7 +28,7 @@ struct TerminalService {
         if !host.identityFile.isEmpty {
             cmd += " -i \(shellEscape(expandTilde(host.identityFile)))"
         }
-        if let port = host.port, port != 22 {
+        if let port = host.port, port != Self.defaultSSHPort {
             cmd += " -p \(port)"
         }
         if host.forwardAgent {
@@ -50,7 +55,7 @@ struct TerminalService {
         let fullPath = expandTilde(keyPath)
         var cmd = "ssh-copy-id"
         cmd += " -i \(shellEscape(fullPath))"
-        if let port = host.port, port != 22 {
+        if let port = host.port, port != Self.defaultSSHPort {
             cmd += " -p \(port)"
         }
         let target: String
@@ -86,12 +91,19 @@ struct TerminalService {
             )
         case .custom:
             guard !customAppPath.isEmpty else {
-                print("Custom terminal path not configured")
+                logger.warning("Custom terminal path not configured")
                 return
             }
-            // Assume custom app follows the same pattern as Ghostty (binary -e /bin/sh -c "cmd")
+            guard customAppPath.hasSuffix(".app") else {
+                logger.warning("Custom terminal path must end with .app")
+                return
+            }
             let appName = URL(fileURLWithPath: customAppPath).deletingPathExtension().lastPathComponent
             let binPath = customAppPath + "/Contents/MacOS/\(appName)"
+            guard FileManager.default.fileExists(atPath: binPath) else {
+                logger.warning("Custom terminal binary not found at expected path")
+                return
+            }
             launchDirectBinary(binPath: binPath, shellCommand: shellCommand)
         }
     }
@@ -101,13 +113,13 @@ struct TerminalService {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: binPath)
         process.arguments = ["-e", "/bin/sh", "-c", shellCommand]
-        process.standardOutput = Pipe()
-        process.standardError = Pipe()
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
 
         do {
             try process.run()
         } catch {
-            print("Failed to launch terminal: \(error)")
+            logger.error("Failed to launch terminal: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -116,19 +128,23 @@ struct TerminalService {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
         process.arguments = ["-e", script]
-        process.standardOutput = Pipe()
-        process.standardError = Pipe()
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
 
         do {
             try process.run()
         } catch {
-            print("Failed to launch \(appName): \(error)")
+            logger.error("Failed to launch \(appName, privacy: .public): \(error.localizedDescription, privacy: .public)")
         }
     }
 
     /// Escape a string for safe embedding in AppleScript double-quoted strings
     private static func escapeAppleScript(_ s: String) -> String {
-        s.replacingOccurrences(of: "\\", with: "\\\\")
-         .replacingOccurrences(of: "\"", with: "\\\"")
+        // Strip control characters that could break out of AppleScript strings
+        let cleaned = s.unicodeScalars.filter { $0.value >= 32 || $0 == "\t" }
+            .map { String($0) }.joined()
+        return cleaned
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
     }
 }

@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
-import Combine
+import os
+
+private let logger = Logger(subsystem: "com.lzdevs.sshman", category: "config")
 
 /// Manages reading and writing ~/.ssh/config
 final class SSHConfigService: ObservableObject {
@@ -42,20 +44,16 @@ final class SSHConfigService: ObservableObject {
         let content = SSHConfig.serialize(hosts: hosts)
         let sshDir = configURL.deletingLastPathComponent()
 
-        // Atomic write: write to temp, then rename
+        // Atomic write: write to temp, then swap atomically
         let tempURL = sshDir.appendingPathComponent("config.tmp")
         do {
             try content.write(to: tempURL, atomically: true, encoding: .utf8)
-            // Set permissions to 600
             try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tempURL.path)
-
-            // Remove old config and rename temp
-            if fm.fileExists(atPath: configURL.path) {
-                try fm.removeItem(at: configURL)
-            }
-            try fm.moveItem(at: tempURL, to: configURL)
+            _ = try fm.replaceItemAt(configURL, withItemAt: tempURL)
         } catch {
-            print("Failed to save SSH config: \(error)")
+            logger.error("Failed to save SSH config: \(error.localizedDescription, privacy: .private)")
+            // Clean up temp file if it still exists
+            try? fm.removeItem(at: tempURL)
         }
     }
 
@@ -64,6 +62,7 @@ final class SSHConfigService: ObservableObject {
         if fm.fileExists(atPath: configURL.path) {
             try? fm.removeItem(at: backupURL)
             try? fm.copyItem(at: configURL, to: backupURL)
+            try? fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: backupURL.path)
         }
     }
 
@@ -91,18 +90,6 @@ final class SSHConfigService: ObservableObject {
         saveGroups()
     }
 
-    func deleteHosts(at offsets: IndexSet) {
-        let toRemove = offsets.map { hosts[$0] }
-        for host in toRemove {
-            for i in groups.indices {
-                groups[i].hostIDs.removeAll { $0 == host.host }
-            }
-        }
-        hosts.remove(atOffsets: offsets)
-        save()
-        saveGroups()
-    }
-
     // MARK: - Groups
 
     func addGroup(_ group: HostGroup) {
@@ -110,31 +97,8 @@ final class SSHConfigService: ObservableObject {
         saveGroups()
     }
 
-    func updateGroup(_ group: HostGroup) {
-        if let index = groups.firstIndex(where: { $0.id == group.id }) {
-            groups[index] = group
-            saveGroups()
-        }
-    }
-
-    func deleteGroup(_ group: HostGroup) {
-        groups.removeAll { $0.id == group.id }
-        saveGroups()
-    }
-
     func saveGroups() {
         HostGroup.saveAll(groups)
-    }
-
-    /// Returns hosts that belong to a group
-    func hosts(in group: HostGroup) -> [SSHHost] {
-        hosts.filter { group.hostIDs.contains($0.host) }
-    }
-
-    /// Returns hosts not in any group
-    func ungroupedHosts() -> [SSHHost] {
-        let allGrouped = Set(groups.flatMap { $0.hostIDs })
-        return hosts.filter { !allGrouped.contains($0.host) }
     }
 
     // MARK: - Import/Export
@@ -145,7 +109,11 @@ final class SSHConfigService: ObservableObject {
     }
 
     func importConfig(from content: String, replace: Bool = false) {
-        let imported = SSHConfig.parse(content: content)
+        var imported = SSHConfig.parse(content: content)
+        // Sanitize imported hosts
+        for i in imported.indices {
+            imported[i] = SSHConfig.sanitizeHost(imported[i])
+        }
         if replace {
             hosts = imported
         } else {

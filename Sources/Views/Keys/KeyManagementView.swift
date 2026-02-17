@@ -62,7 +62,7 @@ struct KeyManagementView: View {
             }.padding(.horizontal, 16).padding(.vertical, 6)
         }
         .background(t.background)
-        .onAppear { refreshKeys() }
+        .task { refreshKeys() }
         .sheet(isPresented: $showingGenerate) { generateKeySheet }
         .alert("Key Generated", isPresented: .init(
             get: { generationResult != nil }, set: { if !$0 { generationResult = nil } }
@@ -173,7 +173,7 @@ struct KeyManagementView: View {
                 Spacer()
                 Button("Cancel") { showingGenerate = false }.keyboardShortcut(.cancelAction)
                 Button("Generate") { generateKey() }.keyboardShortcut(.defaultAction)
-                    .disabled(newKeyName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(!isValidKeyName(newKeyName))
             }.padding()
         }.frame(width: 400, height: 320)
     }
@@ -187,6 +187,15 @@ struct KeyManagementView: View {
         newKeyName = ""; newKeyComment = ""; newKeyPassphrase = ""
         showingGenerate = false
         refreshKeys()
+    }
+
+    private func isValidKeyName(_ name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        return !trimmed.isEmpty
+            && !trimmed.hasPrefix(".")
+            && !trimmed.contains("/")
+            && trimmed.unicodeScalars.allSatisfy({ allowed.contains($0) })
     }
 
     private func refreshKeys() { keys = keyService.listKeys() }

@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var showingImport = false
     @State private var showingExport = false
+    @State private var exportDocument: SSHConfigDocument?
 
     private var t: AppTheme { tm.current }
     private var showRightPanel: Bool { editingHost != nil || showingAddHost }
@@ -34,7 +35,7 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.2), value: showRightPanel)
         .animation(.easeInOut(duration: 0.2), value: editingHost?.id)
         .fileImporter(isPresented: $showingImport, allowedContentTypes: [.plainText, .data], allowsMultipleSelection: false) { handleImport($0) }
-        .fileExporter(isPresented: $showingExport, document: SSHConfigDocument(content: configService.exportConfig()), contentType: .plainText, defaultFilename: "ssh_config") { _ in }
+        .fileExporter(isPresented: $showingExport, document: exportDocument ?? SSHConfigDocument(content: ""), contentType: .plainText, defaultFilename: "ssh_config") { _ in exportDocument = nil }
     }
 
     // MARK: - Icon Rail
@@ -52,7 +53,7 @@ struct ContentView: View {
                 Rectangle().fill(t.secondary.opacity(0.15)).frame(width: 24, height: 0.5)
                 Menu {
                     Button { showingImport = true } label: { Label("Import Config...", systemImage: "square.and.arrow.down") }
-                    Button { showingExport = true } label: { Label("Export Config...", systemImage: "square.and.arrow.up") }
+                    Button { exportDocument = SSHConfigDocument(content: configService.exportConfig()); showingExport = true } label: { Label("Export Config...", systemImage: "square.and.arrow.up") }
                     Divider()
                     Button { configService.load() } label: { Label("Reload Config", systemImage: "arrow.clockwise") }
                 } label: {
@@ -86,7 +87,7 @@ struct ContentView: View {
             .background(RoundedRectangle(cornerRadius: 8).fill(isActive ? t.accent.opacity(0.15) : Color.clear))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain).help(label)
+        .buttonStyle(.plain).help(label).accessibilityLabel(label)
     }
 
     // MARK: - Center / Right
