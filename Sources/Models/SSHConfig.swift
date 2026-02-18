@@ -23,12 +23,10 @@ struct SSHConfig {
 
             // Collect comments before a Host block
             if trimmed.hasPrefix("#") {
-                if currentHost == nil {
-                    if !pendingComment.isEmpty {
-                        pendingComment += "\n"
-                    }
-                    pendingComment += trimmed
+                if !pendingComment.isEmpty {
+                    pendingComment += "\n"
                 }
+                pendingComment += trimmed
                 continue
             }
 
