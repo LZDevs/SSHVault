@@ -12,13 +12,13 @@ struct HostFormView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    @State private var host: String = ""
-    @State private var label: String = ""
+    @State private var name: String = ""
     @State private var hostName: String = ""
     @State private var user: String = ""
     @State private var portString: String = ""
     @State private var identityFile: String = ""
     @State private var proxyJump: String = ""
+    @State private var sftpPath: String = ""
     @State private var forwardAgent: Bool = false
     @State private var comment: String = ""
     @State private var extraOptionsText: String = ""
@@ -40,13 +40,13 @@ struct HostFormView: View {
             existingID = nil
         case .edit(let existing):
             existingID = existing.id
-            _host = State(initialValue: existing.host)
-            _label = State(initialValue: existing.label)
+            _name = State(initialValue: existing.label.isEmpty ? existing.host : existing.label)
             _hostName = State(initialValue: existing.hostName)
             _user = State(initialValue: existing.user)
             _portString = State(initialValue: existing.port.map(String.init) ?? "")
             _identityFile = State(initialValue: existing.identityFile)
             _proxyJump = State(initialValue: existing.proxyJump)
+            _sftpPath = State(initialValue: existing.sftpPath)
             _forwardAgent = State(initialValue: existing.forwardAgent)
             _comment = State(initialValue: existing.comment)
             _extraOptionsText = State(initialValue: existing.extraOptions.map { "\($0.key) \($0.value)" }.joined(separator: "\n"))
@@ -60,8 +60,8 @@ struct HostFormView: View {
     }
 
     private var isValid: Bool {
-        let trimmedHost = host.trimmingCharacters(in: .whitespaces)
-        guard !trimmedHost.isEmpty else { return false }
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmedName.isEmpty else { return false }
         // Validate port range if provided
         if let portStr = portString.nilIfEmpty, let p = Int(portStr) {
             if !(1...65535).contains(p) { return false }
@@ -98,8 +98,7 @@ struct HostFormView: View {
                     // Connection
                     sectionHeader("Connection")
                     VStack(spacing: 10) {
-                        labeledField("Host Alias", text: $host, prompt: "e.g., myserver (no spaces)")
-                        labeledField("Display Name", text: $label, prompt: "Optional, e.g., BDIX - Micro")
+                        labeledField("Name", text: $name, prompt: "e.g., My Server")
                         labeledField("HostName", text: $hostName, prompt: "IP address or domain")
                         labeledField("User", text: $user, prompt: "Username")
                         labeledField("Port", text: $portString, prompt: "22")
@@ -154,6 +153,12 @@ struct HostFormView: View {
                     // Proxy
                     sectionHeader("Proxy")
                     labeledField("ProxyJump", text: $proxyJump, prompt: "e.g., bastion")
+
+                    Divider()
+
+                    // SFTP
+                    sectionHeader("SFTP")
+                    labeledField("Initial Path", text: $sftpPath, prompt: "e.g., /var/www")
 
                     Divider()
 
@@ -291,16 +296,18 @@ struct HostFormView: View {
             formattedComment = "# " + formattedComment
         }
 
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
         let newHost = SSHHost(
             id: existingID ?? UUID(),
-            host: SSHConfig.sanitizeAlias(host.trimmingCharacters(in: .whitespaces)),
-            label: label.trimmingCharacters(in: .whitespaces),
+            host: SSHConfig.sanitizeAlias(trimmedName),
+            label: trimmedName,
             hostName: hostName.trimmingCharacters(in: .whitespaces),
             user: user.trimmingCharacters(in: .whitespaces),
             port: port,
             identityFile: identityFile.trimmingCharacters(in: .whitespaces),
             proxyJump: proxyJump.trimmingCharacters(in: .whitespaces),
             forwardAgent: forwardAgent,
+            sftpPath: sftpPath.trimmingCharacters(in: .whitespaces),
             extraOptions: extras,
             comment: formattedComment
         )

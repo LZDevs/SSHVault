@@ -42,15 +42,19 @@ struct SSHConfig {
                     hosts.append(host)
                 }
                 currentHost = SSHHost(host: sanitizeAlias(parts.value))
-                // Extract @label from comment if present
+                // Extract SSHMan metadata tags from comments
                 let commentLines = pendingComment.components(separatedBy: "\n")
-                let labelLine = commentLines.first { $0.hasPrefix("# @label ") }
-                if let labelLine {
-                    currentHost?.label = String(labelLine.dropFirst("# @label ".count))
-                    currentHost?.comment = commentLines.filter { !$0.hasPrefix("# @label ") }.joined(separator: "\n")
-                } else {
-                    currentHost?.comment = pendingComment
+                var userComments: [String] = []
+                for line in commentLines {
+                    if line.hasPrefix("# @label ") {
+                        currentHost?.label = String(line.dropFirst("# @label ".count))
+                    } else if line.hasPrefix("# @sftppath ") {
+                        currentHost?.sftpPath = String(line.dropFirst("# @sftppath ".count))
+                    } else {
+                        userComments.append(line)
+                    }
                 }
+                currentHost?.comment = userComments.joined(separator: "\n")
                 pendingComment = ""
             } else if var host = currentHost {
                 applyDirective(key: key, value: parts.value, to: &host)
@@ -118,6 +122,7 @@ struct SSHConfig {
         h.user = stripControlChars(h.user)
         h.identityFile = stripControlChars(h.identityFile)
         h.proxyJump = stripControlChars(h.proxyJump)
+        h.sftpPath = stripControlChars(h.sftpPath)
 
         // Validate port range
         if let port = h.port, !(1...65535).contains(port) {
@@ -159,9 +164,12 @@ struct SSHConfig {
                 lines.append("")
             }
 
-            // Write label tag if present
+            // Write SSHMan metadata tags
             if !host.label.isEmpty {
                 lines.append("# @label \(host.label)")
+            }
+            if !host.sftpPath.isEmpty {
+                lines.append("# @sftppath \(host.sftpPath)")
             }
 
             // Write comment if present

@@ -10,6 +10,7 @@ struct SSHHost: Identifiable, Codable, Hashable {
     var identityFile: String
     var proxyJump: String
     var forwardAgent: Bool
+    var sftpPath: String
     var extraOptions: [String: String]
     var comment: String
 
@@ -23,6 +24,7 @@ struct SSHHost: Identifiable, Codable, Hashable {
         identityFile: String = "",
         proxyJump: String = "",
         forwardAgent: Bool = false,
+        sftpPath: String = "",
         extraOptions: [String: String] = [:],
         comment: String = ""
     ) {
@@ -35,6 +37,7 @@ struct SSHHost: Identifiable, Codable, Hashable {
         self.identityFile = identityFile
         self.proxyJump = proxyJump
         self.forwardAgent = forwardAgent
+        self.sftpPath = sftpPath
         self.extraOptions = extraOptions
         self.comment = comment
     }
