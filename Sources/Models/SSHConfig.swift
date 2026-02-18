@@ -46,6 +46,8 @@ struct SSHConfig {
                 for line in commentLines {
                     if line.hasPrefix("# @label ") {
                         currentHost?.label = String(line.dropFirst("# @label ".count))
+                    } else if line.hasPrefix("# @icon ") {
+                        currentHost?.icon = String(line.dropFirst("# @icon ".count))
                     } else if line.hasPrefix("# @sftppath ") {
                         currentHost?.sftpPath = String(line.dropFirst("# @sftppath ".count))
                     } else {
@@ -120,6 +122,7 @@ struct SSHConfig {
         h.user = stripControlChars(h.user)
         h.identityFile = stripControlChars(h.identityFile)
         h.proxyJump = stripControlChars(h.proxyJump)
+        h.icon = stripControlChars(h.icon)
         h.sftpPath = stripControlChars(h.sftpPath)
 
         // Validate port range
@@ -165,6 +168,9 @@ struct SSHConfig {
             // Write SSHMan metadata tags
             if !host.label.isEmpty {
                 lines.append("# @label \(host.label)")
+            }
+            if !host.icon.isEmpty {
+                lines.append("# @icon \(host.icon)")
             }
             if !host.sftpPath.isEmpty {
                 lines.append("# @sftppath \(host.sftpPath)")

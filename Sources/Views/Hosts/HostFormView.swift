@@ -21,6 +21,7 @@ struct HostFormView: View {
     @State private var proxyJump: String = ""
     @State private var sftpPath: String = ""
     @State private var forwardAgent: Bool = false
+    @State private var selectedIcon: String = ""
     @State private var comment: String = ""
     @State private var extraOptionsText: String = ""
     @State private var availableKeys: [SSHKeyInfo] = []
@@ -50,6 +51,7 @@ struct HostFormView: View {
             _proxyJump = State(initialValue: existing.proxyJump)
             _sftpPath = State(initialValue: existing.sftpPath)
             _forwardAgent = State(initialValue: existing.forwardAgent)
+            _selectedIcon = State(initialValue: existing.icon)
             _comment = State(initialValue: existing.comment)
             _extraOptionsText = State(initialValue: existing.extraOptions.map { "\($0.key) \($0.value)" }.joined(separator: "\n"))
             let prefs = TerminalPreferences.shared
@@ -105,6 +107,12 @@ struct HostFormView: View {
                         labeledField("User", text: $user, prompt: "Username")
                         labeledField("Port", text: $portString, prompt: "22")
                     }
+
+                    Divider()
+
+                    // Appearance
+                    sectionHeader("Appearance")
+                    iconPicker
 
                     Divider()
 
@@ -278,6 +286,64 @@ struct HostFormView: View {
         }
     }
 
+    private static let iconChoices: [(name: String, symbol: String)] = [
+        ("Default", "server.rack"),
+        ("Desktop", "desktopcomputer"),
+        ("Laptop", "laptopcomputer"),
+        ("Cloud", "cloud"),
+        ("Drive", "externaldrive"),
+        ("Network", "network"),
+        ("Router", "wifi.router"),
+        ("CPU", "cpu"),
+        ("Memory", "memorychip"),
+        ("Terminal", "terminal"),
+        ("Globe", "globe"),
+        ("Shield", "lock.shield"),
+        ("Cube", "cube"),
+        ("Building", "building.2"),
+        ("House", "house"),
+        ("Media", "play.rectangle"),
+        ("Files", "doc.on.doc"),
+        ("Chart", "chart.bar"),
+        ("Bolt", "bolt"),
+        ("Wrench", "wrench"),
+        ("Game", "gamecontroller"),
+        ("Antenna", "antenna.radiowaves.left.and.right"),
+    ]
+
+    private var iconPicker: some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
+        return LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(Self.iconChoices, id: \.symbol) { choice in
+                let isDefault = choice.symbol == "server.rack"
+                let isSelected = isDefault ? selectedIcon.isEmpty : selectedIcon == choice.symbol
+                Button {
+                    selectedIcon = isDefault ? "" : choice.symbol
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: choice.symbol)
+                            .font(.system(size: 16))
+                            .frame(width: 36, height: 36)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(isSelected ? t.accent.opacity(0.2) : t.surface.opacity(0.6))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .strokeBorder(isSelected ? t.accent : t.secondary.opacity(0.2), lineWidth: isSelected ? 1.5 : 0.5)
+                            )
+                        Text(choice.name)
+                            .font(.system(size: 9))
+                            .lineLimit(1)
+                    }
+                    .foregroundColor(isSelected ? t.accent : t.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
     private func saveHost() {
         let port: Int? = portString.nilIfEmpty.flatMap { Int($0) }
         var extras: [String: String] = [:]
@@ -309,6 +375,7 @@ struct HostFormView: View {
             identityFile: identityFile.trimmingCharacters(in: .whitespaces),
             proxyJump: proxyJump.trimmingCharacters(in: .whitespaces),
             forwardAgent: forwardAgent,
+            icon: selectedIcon,
             sftpPath: sftpPath.trimmingCharacters(in: .whitespaces),
             extraOptions: extras,
             comment: formattedComment

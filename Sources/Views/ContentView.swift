@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var showingImport = false
     @State private var showingExport = false
+    @State private var showingTermiusImport = false
     @State private var showingAbout = false
     @State private var exportDocument: SSHConfigDocument?
 
@@ -35,6 +36,7 @@ struct ContentView: View {
         .preferredColorScheme(t.isDark ? .dark : .light)
         .animation(.easeInOut(duration: 0.2), value: showRightPanel)
         .animation(.easeInOut(duration: 0.2), value: editingHost?.id)
+        .sheet(isPresented: $showingTermiusImport) { TermiusImportView() }
         .sheet(isPresented: $showingAbout) { AboutView() }
         .fileImporter(isPresented: $showingImport, allowedContentTypes: [.plainText, .data], allowsMultipleSelection: false) { handleImport($0) }
         .fileExporter(isPresented: $showingExport, document: exportDocument ?? SSHConfigDocument(content: ""), contentType: .plainText, defaultFilename: "ssh_config") { _ in exportDocument = nil }
@@ -55,6 +57,7 @@ struct ContentView: View {
                 Rectangle().fill(t.secondary.opacity(0.15)).frame(width: 24, height: 0.5)
                 Menu {
                     Button { showingImport = true } label: { Label("Import Config...", systemImage: "square.and.arrow.down") }
+                    Button { showingTermiusImport = true } label: { Label("Import from Termius...", systemImage: "link") }
                     Button { exportDocument = SSHConfigDocument(content: configService.exportConfig()); showingExport = true } label: { Label("Export Config...", systemImage: "square.and.arrow.up") }
                     Divider()
                     Button { configService.load() } label: { Label("Reload Config", systemImage: "arrow.clockwise") }

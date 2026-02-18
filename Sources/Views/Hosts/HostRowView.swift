@@ -17,7 +17,7 @@ struct HostRowView: View {
                         ? t.orange.opacity(0.15)
                         : t.accent.opacity(0.15))
                     .frame(width: 34, height: 34)
-                Image(systemName: host.isWildcard ? "asterisk" : "server.rack")
+                Image(systemName: host.isWildcard ? "asterisk" : (host.icon.isEmpty ? "server.rack" : host.icon))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(host.isWildcard ? t.orange : t.accent)
             }
