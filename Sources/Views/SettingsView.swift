@@ -87,7 +87,7 @@ struct SettingsView: View {
                 // Theme name + indicator
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(theme.isDark ? Color.white.opacity(0.3) : Color.black.opacity(0.2))
+                        .fill(t.secondary.opacity(0.4))
                         .frame(width: 5, height: 5)
                     Text(theme.name)
                         .font(.system(size: 10.5, weight: isSelected ? .bold : .medium))
@@ -179,7 +179,7 @@ struct SettingsView: View {
                     .padding(.vertical, 6)
                     .background(
                         RoundedRectangle(cornerRadius: 7)
-                            .fill(app.isInstalled ? t.green.opacity(0.04) : Color.clear)
+                            .fill(app.isInstalled ? t.green.opacity(0.04) : .clear)
                     )
                 }
             }

@@ -11,6 +11,7 @@ struct HostFormView: View {
     var onCancel: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var tm = ThemeManager.shared
 
     @State private var name: String = ""
     @State private var hostName: String = ""
@@ -28,6 +29,7 @@ struct HostFormView: View {
     @State private var customTerminalPath: String = ""
 
     private let terminalPrefs = TerminalPreferences.shared
+    private var t: AppTheme { tm.current }
     private var existingID: UUID?
 
     init(mode: Mode, onSave: @escaping (SSHHost) -> Void, onCancel: (() -> Void)? = nil) {
@@ -112,7 +114,7 @@ struct HostFormView: View {
                         HStack {
                             Text("Identity File")
                                 .frame(width: 120, alignment: .trailing)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(t.secondary)
                             TextField("~/.ssh/id_ed25519", text: $identityFile)
                                 .textFieldStyle(.roundedBorder)
                             Menu {
@@ -126,7 +128,7 @@ struct HostFormView: View {
                                             HStack {
                                                 Text(key.name)
                                                 Text("(\(key.keyType))")
-                                                    .foregroundColor(.secondary)
+                                                    .foregroundColor(t.secondary)
                                             }
                                         }
                                     }
@@ -141,7 +143,7 @@ struct HostFormView: View {
                         HStack {
                             Text("Forward Agent")
                                 .frame(width: 120, alignment: .trailing)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(t.secondary)
                             Toggle("", isOn: $forwardAgent)
                                 .labelsHidden()
                             Spacer()
@@ -168,7 +170,7 @@ struct HostFormView: View {
                         HStack {
                             Text("Terminal")
                                 .frame(width: 120, alignment: .trailing)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(t.secondary)
                             Picker("", selection: $useDefaultTerminal) {
                                 Text("Use Default (\(terminalPrefs.defaultTerminal.displayName))")
                                     .tag(true)
@@ -183,7 +185,7 @@ struct HostFormView: View {
                             HStack {
                                 Text("App")
                                     .frame(width: 120, alignment: .trailing)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(t.secondary)
                                 Picker("", selection: $selectedTerminal) {
                                     ForEach(TerminalApp.allCases, id: \.self) { app in
                                         Text(app.displayName).tag(app)
@@ -197,7 +199,7 @@ struct HostFormView: View {
                                 HStack {
                                     Text("App Path")
                                         .frame(width: 120, alignment: .trailing)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(t.secondary)
                                     TextField("/Applications/MyTerm.app", text: $customTerminalPath)
                                         .textFieldStyle(.roundedBorder)
                                 }
@@ -212,13 +214,13 @@ struct HostFormView: View {
                     HStack(alignment: .top) {
                         Text("Options")
                             .frame(width: 120, alignment: .trailing)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(t.secondary)
                         TextEditor(text: $extraOptionsText)
                             .font(.system(.body, design: .monospaced))
                             .frame(minHeight: 50, maxHeight: 80)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4)
-                                    .stroke(Color.secondary.opacity(0.3))
+                                    .stroke(t.secondary.opacity(0.3))
                             )
                     }
 
@@ -262,7 +264,7 @@ struct HostFormView: View {
         Text(title)
             .font(.subheadline)
             .fontWeight(.semibold)
-            .foregroundColor(.secondary)
+            .foregroundColor(t.secondary)
             .textCase(.uppercase)
     }
 
@@ -270,7 +272,7 @@ struct HostFormView: View {
         HStack {
             Text(label)
                 .frame(width: 120, alignment: .trailing)
-                .foregroundColor(.secondary)
+                .foregroundColor(t.secondary)
             TextField(prompt, text: text)
                 .textFieldStyle(.roundedBorder)
         }

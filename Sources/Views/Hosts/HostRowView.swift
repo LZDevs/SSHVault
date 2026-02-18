@@ -19,7 +19,7 @@ struct HostRowView: View {
                     .frame(width: 34, height: 34)
                 Image(systemName: host.isWildcard ? "asterisk" : "server.rack")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(host.isWildcard ? t.orange : t.cyan)
+                    .foregroundColor(host.isWildcard ? t.orange : t.accent)
             }
 
             VStack(alignment: .leading, spacing: 2) {
