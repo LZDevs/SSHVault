@@ -44,8 +44,9 @@ extension AppTheme {
 
     static let all: [AppTheme] = [
         // Dark — classic
-        .dracula, .oneDark, .tokyoNight, .nord,
-        .catppuccinMocha, .gruvboxDark, .rosePine,
+        .dracula, .monokai, .oneDark, .tokyoNight, .nord,
+        .solarizedDark, .kanagawa, .everforest, .gruvboxDark, .rosePine,
+        .catppuccinMocha, .catppuccinMacchiato, .catppuccinFrappe,
         // Dark — daisyUI
         .dark, .synthwave, .halloween, .forest, .aqua,
         .luxury, .draculaDaisy, .business, .night, .coffee,
@@ -59,7 +60,23 @@ extension AppTheme {
         .lemonade, .winter, .nordLight, .caramelLatte, .silk,
     ]
 
-    // ── Dark Themes ──
+    // ── Dark — Classic ──
+
+    static let monokai = AppTheme(
+        id: "monokai", name: "Monokai", isDark: true,
+        background: Color(hex: 0x272822),
+        sidebar:    Color(hex: 0x1E1F1A),
+        surface:    Color(hex: 0x3E3D32),
+        foreground: Color(hex: 0xF8F8F2),
+        secondary:  Color(hex: 0x75715E),
+        accent:     Color(hex: 0xAE81FF),
+        cyan:       Color(hex: 0x66D9EF),
+        green:      Color(hex: 0xA6E22E),
+        orange:     Color(hex: 0xFD971F),
+        pink:       Color(hex: 0xF92672),
+        red:        Color(hex: 0xF92672),
+        yellow:     Color(hex: 0xE6DB74)
+    )
 
     static let dracula = AppTheme(
         id: "dracula", name: "Dracula", isDark: true,
@@ -173,7 +190,87 @@ extension AppTheme {
         yellow:     Color(hex: 0xF6C177)
     )
 
-    // ── Light Themes ──
+    static let solarizedDark = AppTheme(
+        id: "solarized-dark", name: "Solarized Dark", isDark: true,
+        background: Color(hex: 0x002B36),
+        sidebar:    Color(hex: 0x00252F),
+        surface:    Color(hex: 0x073642),
+        foreground: Color(hex: 0x839496),
+        secondary:  Color(hex: 0x586E75),
+        accent:     Color(hex: 0x268BD2),
+        cyan:       Color(hex: 0x2AA198),
+        green:      Color(hex: 0x859900),
+        orange:     Color(hex: 0xCB4B16),
+        pink:       Color(hex: 0xD33682),
+        red:        Color(hex: 0xDC322F),
+        yellow:     Color(hex: 0xB58900)
+    )
+
+    static let kanagawa = AppTheme(
+        id: "kanagawa", name: "Kanagawa", isDark: true,
+        background: Color(hex: 0x1F1F28),
+        sidebar:    Color(hex: 0x16161D),
+        surface:    Color(hex: 0x2A2A37),
+        foreground: Color(hex: 0xDCD7BA),
+        secondary:  Color(hex: 0x727169),
+        accent:     Color(hex: 0x7E9CD8),
+        cyan:       Color(hex: 0x7FB4CA),
+        green:      Color(hex: 0x76946A),
+        orange:     Color(hex: 0xFFA066),
+        pink:       Color(hex: 0xD27E99),
+        red:        Color(hex: 0xC34043),
+        yellow:     Color(hex: 0xDCA561)
+    )
+
+    static let everforest = AppTheme(
+        id: "everforest", name: "Everforest", isDark: true,
+        background: Color(hex: 0x2D353B),
+        sidebar:    Color(hex: 0x272E33),
+        surface:    Color(hex: 0x343F44),
+        foreground: Color(hex: 0xD3C6AA),
+        secondary:  Color(hex: 0x859289),
+        accent:     Color(hex: 0x7FBBB3),
+        cyan:       Color(hex: 0x83C092),
+        green:      Color(hex: 0xA7C080),
+        orange:     Color(hex: 0xE69875),
+        pink:       Color(hex: 0xD699B6),
+        red:        Color(hex: 0xE67E80),
+        yellow:     Color(hex: 0xDBBC7F)
+    )
+
+    static let catppuccinMacchiato = AppTheme(
+        id: "catppuccin-macchiato", name: "Catppuccin Macchiato", isDark: true,
+        background: Color(hex: 0x24273A),
+        sidebar:    Color(hex: 0x1E2030),
+        surface:    Color(hex: 0x363A4F),
+        foreground: Color(hex: 0xCAD3F5),
+        secondary:  Color(hex: 0x6E738D),
+        accent:     Color(hex: 0xC6A0F6),
+        cyan:       Color(hex: 0x7DC4E4),
+        green:      Color(hex: 0xA6DA95),
+        orange:     Color(hex: 0xF5A97F),
+        pink:       Color(hex: 0xF5BDE6),
+        red:        Color(hex: 0xED8796),
+        yellow:     Color(hex: 0xEED49F)
+    )
+
+    static let catppuccinFrappe = AppTheme(
+        id: "catppuccin-frappe", name: "Catppuccin Frappé", isDark: true,
+        background: Color(hex: 0x303446),
+        sidebar:    Color(hex: 0x292C3C),
+        surface:    Color(hex: 0x414559),
+        foreground: Color(hex: 0xC6D0F5),
+        secondary:  Color(hex: 0x626880),
+        accent:     Color(hex: 0xCA9EE6),
+        cyan:       Color(hex: 0x85C1DC),
+        green:      Color(hex: 0xA6D189),
+        orange:     Color(hex: 0xEF9F76),
+        pink:       Color(hex: 0xF4B8E4),
+        red:        Color(hex: 0xE78284),
+        yellow:     Color(hex: 0xE5C890)
+    )
+
+    // ── Light — Classic ──
 
     static let githubLight = AppTheme(
         id: "github-light", name: "GitHub Light", isDark: false,

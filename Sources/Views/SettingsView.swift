@@ -9,11 +9,7 @@ struct SettingsView: View {
 
     private var t: AppTheme { tm.current }
 
-    private let themeColumns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10)
-    ]
+    private let themeColumns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 5)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -34,10 +30,10 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    themeSection
                     displaySection
                     terminalSection
                     availabilitySection
+                    themeSection
                 }
                 .padding(16)
             }
@@ -57,7 +53,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader("THEME")
 
-            LazyVGrid(columns: themeColumns, spacing: 10) {
+            LazyVGrid(columns: themeColumns, spacing: 6) {
                 ForEach(AppTheme.all) { theme in
                     themeCard(theme)
                 }
@@ -72,38 +68,29 @@ struct SettingsView: View {
                 tm.select(theme)
             }
         } label: {
-            VStack(spacing: 0) {
-                // Color preview strip
+            VStack(spacing: 3) {
                 HStack(spacing: 0) {
-                    theme.background.frame(height: 28)
-                    theme.surface.frame(height: 28)
-                    theme.accent.frame(height: 28)
-                    theme.cyan.frame(height: 28)
-                    theme.green.frame(height: 28)
+                    theme.background
+                    theme.accent
+                    theme.cyan
+                    theme.green
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                .padding(.horizontal, 8)
-                .padding(.top, 8)
+                .frame(height: 14)
+                .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                .padding(.horizontal, 6)
 
-                // Theme name + indicator
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(t.secondary.opacity(0.4))
-                        .frame(width: 5, height: 5)
-                    Text(theme.name)
-                        .font(.system(size: 10.5, weight: isSelected ? .bold : .medium))
-                        .foregroundColor(t.foreground)
-                        .lineLimit(1)
-                }
-                .padding(.top, 6)
-                .padding(.bottom, 8)
+                Text(theme.name)
+                    .font(.system(size: 9.5, weight: isSelected ? .bold : .medium))
+                    .foregroundColor(t.foreground)
+                    .lineLimit(1)
             }
+            .padding(.vertical, 5)
             .background(
-                RoundedRectangle(cornerRadius: 9)
+                RoundedRectangle(cornerRadius: 7)
                     .fill(isSelected ? t.accent.opacity(0.12) : t.surface.opacity(0.6))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 9)
+                RoundedRectangle(cornerRadius: 7)
                     .strokeBorder(
                         isSelected ? t.accent.opacity(0.6) : t.secondary.opacity(0.15),
                         lineWidth: isSelected ? 1.5 : 0.5

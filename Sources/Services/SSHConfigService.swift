@@ -97,6 +97,29 @@ final class SSHConfigService: ObservableObject {
         saveGroups()
     }
 
+    func renameGroup(_ group: HostGroup, to name: String) {
+        guard let idx = groups.firstIndex(where: { $0.id == group.id }) else { return }
+        groups[idx].name = name
+        saveGroups()
+    }
+
+    func deleteGroup(_ group: HostGroup) {
+        groups.removeAll { $0.id == group.id }
+        saveGroups()
+    }
+
+    func moveGroupUp(_ group: HostGroup) {
+        guard let idx = groups.firstIndex(where: { $0.id == group.id }), idx > 0 else { return }
+        groups.swapAt(idx, idx - 1)
+        saveGroups()
+    }
+
+    func moveGroupDown(_ group: HostGroup) {
+        guard let idx = groups.firstIndex(where: { $0.id == group.id }), idx < groups.count - 1 else { return }
+        groups.swapAt(idx, idx + 1)
+        saveGroups()
+    }
+
     func saveGroups() {
         HostGroup.saveAll(groups)
     }

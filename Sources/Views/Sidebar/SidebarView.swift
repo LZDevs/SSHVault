@@ -13,6 +13,10 @@ struct SidebarView: View {
     @State private var newGroupName = ""
     @State private var hostToDelete: SSHHost?
     @State private var showDeleteConfirm = false
+    @State private var groupToRename: HostGroup?
+    @State private var renameGroupName = ""
+    @State private var groupToDelete: HostGroup?
+    @State private var showDeleteGroupConfirm = false
 
     private var t: AppTheme { tm.current }
 
@@ -84,6 +88,29 @@ struct SidebarView: View {
                     configService.addGroup(HostGroup(name: newGroupName))
                     newGroupName = ""
                 }
+            }
+        }
+        .alert("Rename Group", isPresented: .init(
+            get: { groupToRename != nil },
+            set: { if !$0 { groupToRename = nil } }
+        )) {
+            TextField("Group name", text: $renameGroupName)
+            Button("Cancel", role: .cancel) { groupToRename = nil }
+            Button("Rename") {
+                if let group = groupToRename, !renameGroupName.isEmpty {
+                    configService.renameGroup(group, to: renameGroupName)
+                }
+                groupToRename = nil
+            }
+        }
+        .alert("Delete Group?", isPresented: $showDeleteGroupConfirm) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                if let group = groupToDelete { configService.deleteGroup(group) }
+            }
+        } message: {
+            if let group = groupToDelete {
+                Text("Are you sure you want to delete \"\(group.name)\"? Hosts in this group will become ungrouped.")
             }
         }
         .alert("Delete Host?", isPresented: $showDeleteConfirm) {
@@ -158,6 +185,26 @@ struct SidebarView: View {
                     sectionHeader(group.name, group: group)
                         .contentShape(Rectangle())
                         .dropDestination(for: String.self) { a, _ in dropHosts(a, into: group) }
+                        .contextMenu {
+                            Button { renameGroupName = group.name; groupToRename = group } label: {
+                                Label("Rename", systemImage: "pencil")
+                            }
+                            Divider()
+                            Button { configService.moveGroupUp(group) } label: {
+                                Label("Move Up", systemImage: "arrow.up")
+                            }
+                            .disabled(configService.groups.first?.id == group.id)
+                            Button { configService.moveGroupDown(group) } label: {
+                                Label("Move Down", systemImage: "arrow.down")
+                            }
+                            .disabled(configService.groups.last?.id == group.id)
+                            Divider()
+                            Button(role: .destructive) {
+                                groupToDelete = group; showDeleteGroupConfirm = true
+                            } label: {
+                                Label("Delete Group", systemImage: "trash")
+                            }
+                        }
                     LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(groupHosts) { host in hostTile(host) }
                     }
